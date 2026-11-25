@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../.dart_tool"
+		},
+		{
+			"path": "../.git"
+		},
+		{
+			"path": "../android"
+		},
+		{
+			"path": "../build"
+		},
+		{
+			"path": "../ios"
+		},
+		{
+			"path": "../lib"
+		}
+	]
+}

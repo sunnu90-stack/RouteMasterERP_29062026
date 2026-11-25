@@ -1,0 +1,47 @@
+﻿Analyzing RouteMasterERP_29062026...                            
+
+warning - The value of the local variable 'simplePrompt' isn't used. Try removing the variable or using it - lib\src\ai.dart:927:13 - unused_local_variable
+warning - Dead code. Try removing the code, or fixing the code before it so that it can be reached - lib\src\ai.dart:1216:5 - dead_code
+warning - The value of the field '_activeTab' isn't used. Try removing the field, or using it - lib\src\ai.dart:1308:7 - unused_field
+warning - The declaration '_quickBtn' isn't referenced. Try removing the declaration of '_quickBtn' - lib\src\ai.dart:1848:10 - unused_element
+warning - The value of the local variable 'expenses' isn't used. Try removing the variable or using it - lib\src\ai.dart:2718:17 - unused_local_variable
+   info - 'localeId' is deprecated and shouldn't be used. Use SpeechListenOptions.localeId instead. Try replacing the use of the deprecated member with the replacement - lib\src\ai.dart:3236:25 - deprecated_member_use
+   info - 'listenFor' is deprecated and shouldn't be used. Use SpeechListenOptions.listenFor instead. Try replacing the use of the deprecated member with the replacement - lib\src\ai.dart:3237:25 - deprecated_member_use
+   info - 'pauseFor' is deprecated and shouldn't be used. Use SpeechListenOptions.pauseFor instead. Try replacing the use of the deprecated member with the replacement - lib\src\ai.dart:3238:25 - deprecated_member_use
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\src\feature_screens.dart:2235:25 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre. Try replacing the use of the deprecated member with the replacement - lib\src\feature_screens.dart:2237:25 - deprecated_member_use
+warning - The value of the field '_appLanguage' isn't used. Try removing the field, or using it - lib\src\main_shell.dart:32:10 - unused_field
+warning - The value of the field '_pOriginPlaceId' isn't used. Try removing the field, or using it - lib\src\main_shell.dart:65:16 - unused_field
+warning - The value of the field '_pDestPlaceId' isn't used. Try removing the field, or using it - lib\src\main_shell.dart:66:16 - unused_field
+warning - The declaration '_recordTripExpenseReceipt' isn't referenced. Try removing the declaration of '_recordTripExpenseReceipt' - lib\src\main_shell.dart:1560:8 - unused_element
+warning - The declaration '_recordPodAndCreateInvoice' isn't referenced. Try removing the declaration of '_recordPodAndCreateInvoice' - lib\src\main_shell.dart:1568:20 - unused_element
+warning - The declaration '_handleAdminTap' isn't referenced. Try removing the declaration of '_handleAdminTap' - lib\src\main_shell.dart:1660:8 - unused_element
+warning - The declaration '_aiMiniKpi' isn't referenced. Try removing the declaration of '_aiMiniKpi' - lib\src\main_shell.dart:1948:10 - unused_element
+warning - The value of the local variable 'now' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:1973:11 - unused_local_variable
+warning - The declaration '_cardDeco' isn't referenced. Try removing the declaration of '_cardDeco' - lib\src\main_shell.dart:2140:17 - unused_element
+warning - The declaration '_statTile' isn't referenced. Try removing the declaration of '_statTile' - lib\src\main_shell.dart:2742:10 - unused_element
+warning - The declaration '_actBtn' isn't referenced. Try removing the declaration of '_actBtn' - lib\src\main_shell.dart:2783:10 - unused_element
+warning - The declaration '_navIcon' isn't referenced. Try removing the declaration of '_navIcon' - lib\src\main_shell.dart:2848:10 - unused_element
+warning - The declaration '_statCard' isn't referenced. Try removing the declaration of '_statCard' - lib\src\main_shell.dart:2858:10 - unused_element
+warning - The declaration '_heroStat' isn't referenced. Try removing the declaration of '_heroStat' - lib\src\main_shell.dart:2892:10 - unused_element
+warning - The declaration '_miniCard' isn't referenced. Try removing the declaration of '_miniCard' - lib\src\main_shell.dart:2907:10 - unused_element
+warning - The declaration '_showExpenses' isn't referenced. Try removing the declaration of '_showExpenses' - lib\src\main_shell.dart:3000:8 - unused_element
+warning - The value of the local variable '_selectedDriver' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:5214:25 - unused_local_variable
+warning - The value of the local variable 'wtCtrl2' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:6667:11 - unused_local_variable
+warning - The value of the local variable 'src' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:7036:51 - unused_local_variable
+warning - The value of the local variable 'src' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:7429:51 - unused_local_variable
+warning - The value of the local variable 'amt' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:8481:47 - unused_local_variable
+warning - The declaration '_showDocUploadDialog' isn't referenced. Try removing the declaration of '_showDocUploadDialog' - lib\src\main_shell.dart:9745:8 - unused_element
+warning - The value of the local variable 'isOCRing' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:9837:10 - unused_local_variable
+warning - The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand - lib\src\main_shell.dart:9859:39 - dead_null_aware_expression
+warning - The value of the local variable 'isPUCC' isn't used. Try removing the variable or using it - lib\src\main_shell.dart:9910:11 - unused_local_variable
+warning - The left operand can't be null, so the right operand is never executed. Try removing the operator and the right operand - lib\src\main_shell.dart:12403:39 - dead_null_aware_expression
+
+flutter : 36 issues found. (ran in 5.9s)
+At line:1 char:60
++ ... aster/29062026/RouteMasterERP_29062026"; flutter analyze 2>&1 | Out-F ...
++                                              ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (36 issues found. (ran in 5.9s):St 
+   ring) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
