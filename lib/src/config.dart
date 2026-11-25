@@ -12,8 +12,15 @@ class AppConfig {
   // Developer master PIN — change before going live.
   static const String _adminPin =
       String.fromEnvironment('ADMIN_PIN', defaultValue: '');
-  static const String googleMapsApiKey =
+  // Two ways to set this (either works):
+  //   1. Build with:  flutter run --dart-define=MAPS_KEY=YOUR_KEY
+  //   2. OR paste your key between the quotes on the line below.
+  static const String _mapsKeyHardcoded =
+      ''; // <-- paste Google Maps key here as a fallback (optional)
+  static const String _mapsKeyFromBuild =
       String.fromEnvironment('MAPS_KEY', defaultValue: '');
+  static String get googleMapsApiKey =>
+      _mapsKeyFromBuild.isNotEmpty ? _mapsKeyFromBuild : _mapsKeyHardcoded;
   // ── Gemini AI key (FREE — get from aistudio.google.com, no card needed) ──
   // ══════════════════════════════════════════════════════════
   // AI API KEYS

@@ -38,12 +38,22 @@ class _MainShellState extends ConsumerState<MainShell>
   RouteMasterModuleState moduleState = RouteMasterModuleState();
   Timer? _etaExpiryTimer;
 
+  String _normName(String? s) =>
+      (s ?? '').toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  bool _ledgerBelongsToCurrentDriver(TripLedger l) {
+    final candidates = <String>{
+      _normName(FirebaseService.currentUser?.displayName),
+      _normName(userProfile.companyName),
+    }..removeWhere((e) => e.isEmpty);
+    final ledgerName = _normName(l.driverName);
+    if (ledgerName.isEmpty) return false;
+    return candidates.contains(ledgerName);
+  }
+
   List<TripLedger> get _visibleLedgers {
     if (userProfile.role == UserRole.driver) {
-      final name = FirebaseService.currentUser?.displayName ?? '';
-      return ledgers
-          .where((l) => l.driverName != null && l.driverName == name)
-          .toList();
+      return ledgers.where(_ledgerBelongsToCurrentDriver).toList();
     }
     return ledgers;
   }
@@ -2022,10 +2032,7 @@ class _MainShellState extends ConsumerState<MainShell>
 
   Widget _buildDriverDash() {
     // Clean minimal driver dashboard
-    final myTrips = _visibleLedgers
-        .where((l) =>
-            l.driverName == userProfile.companyName || l.vehicleNo.isNotEmpty)
-        .toList();
+    final myTrips = _visibleLedgers;
     final pendingSalary = drivers
         .where((d) => d.phone == userProfile.phone)
         .fold(0.0, (s, d) => s + d.balance);
@@ -5231,8 +5238,7 @@ class _MainShellState extends ConsumerState<MainShell>
     return 'Booked Load';
   }
 
-  TripLedger _ledgerFromBookedLoad(MarketLoad load,
-      {required bool forPoster}) {
+  TripLedger _ledgerFromBookedLoad(MarketLoad load, {required bool forPoster}) {
     final matchingFleet = fleet.where((v) {
       final need = load.vehicleType.toLowerCase().split(' ').first;
       return v.type.toLowerCase().contains(need);
@@ -5248,8 +5254,9 @@ class _MainShellState extends ConsumerState<MainShell>
     return TripLedger(
         id: "BL${forPoster ? 'P' : 'B'}_${Uri.encodeComponent(load.id)}",
         date: "${now.day}/${now.month}/${now.year}",
-        partyName:
-            forPoster ? _bookedFleetOwnerName(load) : _postedConsignorName(load),
+        partyName: forPoster
+            ? _bookedFleetOwnerName(load)
+            : _postedConsignorName(load),
         vehicleNo: vehicleNo,
         route: load.route,
         ownership: forPoster || matchingFleet.isNotEmpty
@@ -5266,6 +5273,12 @@ class _MainShellState extends ConsumerState<MainShell>
         unloadingState: load.destState,
         freightBilled: load.targetPrice,
         paymentReceived: 0,
+        driverName: userProfile.role == UserRole.driver
+            ? (FirebaseService.currentUser?.displayName?.trim().isNotEmpty ==
+                    true
+                ? FirebaseService.currentUser!.displayName!.trim()
+                : userProfile.companyName.trim())
+            : null,
         marketTruckFreight:
             !forPoster && matchingFleet.isEmpty ? load.targetPrice * 0.88 : 0,
         distanceKm: 0,
@@ -5457,19 +5470,19 @@ class _MainShellState extends ConsumerState<MainShell>
                             'bookedVehicleNo': load.bookedVehicleNo,
                           });
                         } catch (e) {
-                          debugPrint('Could not publish booking ${load.id}: $e');
+                          debugPrint(
+                              'Could not publish booking ${load.id}: $e');
                           setState(() {
                             load.status = BidStatus.pending;
                             load.bookedByUid = '';
                             load.bookedByName = '';
                             load.bookedVehicleNo = '';
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  backgroundColor: Colors.red,
-                                  behavior: SnackBarBehavior.floating,
-                                  content: Text(
-                                      'Booking could not be shared. Check your connection and try again.')));
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                              backgroundColor: Colors.red,
+                              behavior: SnackBarBehavior.floating,
+                              content: Text(
+                                  'Booking could not be shared. Check your connection and try again.')));
                           return;
                         }
                       }
@@ -5510,10 +5523,9 @@ class _MainShellState extends ConsumerState<MainShell>
                               ? 'Load booked! Both parties will see it in Khata.'
                               : 'Load booked! Entry added to your Khata.';
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          backgroundColor:
-                              FirebaseService.isReady
-                                  ? Colors.green
-                                  : Colors.orange,
+                          backgroundColor: FirebaseService.isReady
+                              ? Colors.green
+                              : Colors.orange,
                           behavior: SnackBarBehavior.floating,
                           content: Text(bookingMessage)));
                       Future.delayed(const Duration(milliseconds: 400), () {
@@ -6088,8 +6100,8 @@ class _MainShellState extends ConsumerState<MainShell>
                     margin: const EdgeInsets.only(top: 10),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                        color: themeConfig.highlightColor
-                            .withValues(alpha: themeConfig.isDark ? 0.14 : 0.08),
+                        color: themeConfig.highlightColor.withValues(
+                            alpha: themeConfig.isDark ? 0.14 : 0.08),
                         borderRadius: BorderRadius.circular(10)),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -6194,10 +6206,12 @@ class _MainShellState extends ConsumerState<MainShell>
                             fontSize: 12),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: themeConfig.cardBorder)),
+                            borderSide:
+                                BorderSide(color: themeConfig.cardBorder)),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: themeConfig.cardBorder)),
+                            borderSide:
+                                BorderSide(color: themeConfig.cardBorder)),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
@@ -6231,10 +6245,12 @@ class _MainShellState extends ConsumerState<MainShell>
                             fontSize: 12),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: themeConfig.cardBorder)),
+                            borderSide:
+                                BorderSide(color: themeConfig.cardBorder)),
                         enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: themeConfig.cardBorder)),
+                            borderSide:
+                                BorderSide(color: themeConfig.cardBorder)),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
@@ -6276,9 +6292,9 @@ class _MainShellState extends ConsumerState<MainShell>
                               ? Colors.orange
                               : isBookedLoad(l)
                                   ? themeConfig.accentColor
-                              : l.partyPending <= 0
-                                  ? Colors.green
-                                  : Colors.blueGrey;
+                                  : l.partyPending <= 0
+                                      ? Colors.green
+                                      : Colors.blueGrey;
                       final st = l.partyPending <= 0
                           ? "✓ Settled"
                           : l.isPaymentOverdue
@@ -6365,16 +6381,14 @@ class _MainShellState extends ConsumerState<MainShell>
                                   const SizedBox(height: 6),
                                   Text(l.partyName,
                                       style: TextStyle(
-                                          color:
-                                              themeConfig.primaryTextColor,
+                                          color: themeConfig.primaryTextColor,
                                           fontSize: 17,
                                           fontWeight: FontWeight.w800)),
                                   const SizedBox(height: 2),
                                   Text(
                                       "${l.loadingPoint.isNotEmpty ? '${l.loadingPoint} -> ${l.unloadingPoint}' : l.route} - ${l.date}",
                                       style: TextStyle(
-                                          color:
-                                              themeConfig.secondaryTextColor,
+                                          color: themeConfig.secondaryTextColor,
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500)),
                                   if (l.materialName.isNotEmpty)

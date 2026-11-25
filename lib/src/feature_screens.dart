@@ -2450,6 +2450,27 @@ class DriverLedgerScreen extends StatefulWidget {
 }
 
 class _DriverLedgerScreenState extends State<DriverLedgerScreen> {
+  static int _signFor(DriverTxType type) {
+    switch (type) {
+      case DriverTxType.advance:
+      case DriverTxType.fuel:
+      case DriverTxType.penalty:
+      case DriverTxType.deduction:
+        return 1;
+      case DriverTxType.salary:
+      case DriverTxType.bonus:
+        return -1;
+    }
+  }
+
+  void _recomputeBalance() {
+    double bal = 0;
+    for (final tx in widget.driver.transactions) {
+      bal += _signFor(tx.type) * tx.amount;
+    }
+    widget.driver.balance = double.parse(bal.toStringAsFixed(2));
+  }
+
   void _addTransaction(DriverTxType type, double amount, String note) {
     final now = DateTime.now();
     setState(() {
@@ -2458,18 +2479,11 @@ class _DriverLedgerScreenState extends State<DriverLedgerScreen> {
         DriverTx(
           date: '${now.day}/${now.month}/${now.year}',
           type: type,
-          amount: amount,
+          amount: double.parse(amount.toStringAsFixed(2)),
           note: note,
         ),
       );
-      if (type == DriverTxType.advance ||
-          type == DriverTxType.fuel ||
-          type == DriverTxType.penalty ||
-          type == DriverTxType.deduction) {
-        widget.driver.balance += amount;
-      } else {
-        widget.driver.balance -= amount;
-      }
+      _recomputeBalance();
     });
     widget.onUpdate();
   }
@@ -2509,58 +2523,135 @@ class _DriverLedgerScreenState extends State<DriverLedgerScreen> {
     );
   }
 
+  String _money(double v) {
+    final neg = v < 0;
+    final s = v.abs().toStringAsFixed(2);
+    final parts = s.split('.');
+    final rev = parts[0].split('').reversed.toList();
+    final buf = StringBuffer();
+    for (var i = 0; i < rev.length; i++) {
+      if (i == 3 || (i > 3 && (i - 3) % 2 == 0)) buf.write(',');
+      buf.write(rev[i]);
+    }
+    final grouped = buf.toString().split('').reversed.join();
+    return '${neg ? '-' : ''}Rs.$grouped.${parts[1]}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final driver = widget.driver;
+    final bal = driver.balance;
+    final owes = bal > 0.009;
+    final owed = bal < -0.009;
+    final statusText = owes
+        ? 'Driver owes you'
+        : owed
+            ? 'You owe driver'
+            : 'All settled';
+    final statusColor = owes
+        ? const Color(0xFFEF4444)
+        : owed
+            ? const Color(0xFF10B981)
+            : const Color(0xFF64748B);
+
+    double totIn = 0, totOut = 0;
+    for (final tx in driver.transactions) {
+      if (_signFor(tx.type) > 0) {
+        totIn += tx.amount;
+      } else {
+        totOut += tx.amount;
+      }
+    }
+
+    final ordered = driver.transactions.reversed.toList();
+    final running = <double>[];
+    double r = 0;
+    for (final tx in ordered) {
+      r += _signFor(tx.type) * tx.amount;
+      running.add(double.parse(r.toStringAsFixed(2)));
+    }
+    final runningNewestFirst = running.reversed.toList();
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('${driver.name} Ledger'),
+        title: Text('${driver.name} — Ledger'),
         backgroundColor: const Color(0xFF0EA5E9),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: context.cardColor,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(driver.name,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF0F172A))),
-              const SizedBox(height: 4),
-              Text(driver.phone,
-                  style: const TextStyle(color: Color(0xFF64748B))),
-              const SizedBox(height: 12),
-              Text('Balance: Rs.${driver.balance.toStringAsFixed(0)}',
+              Row(children: [
+                Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(driver.name,
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF0F172A))),
+                        const SizedBox(height: 2),
+                        Text(driver.phone,
+                            style: const TextStyle(color: Color(0xFF64748B))),
+                      ]),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Text(statusText,
+                      style: TextStyle(
+                          color: statusColor,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800)),
+                ),
+              ]),
+              const Divider(height: 24),
+              const Text('Current Balance',
                   style: TextStyle(
-                      color: driver.balance > 0 ? Colors.red : Colors.green,
-                      fontSize: 18,
+                      color: Color(0xFF64748B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(_money(bal.abs()),
+                  style: TextStyle(
+                      color: statusColor,
+                      fontSize: 26,
                       fontWeight: FontWeight.w900)),
+              const SizedBox(height: 14),
+              Row(children: [
+                Expanded(
+                    child: _summaryTile('Advances / Deductions', _money(totIn),
+                        const Color(0xFFEF4444))),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: _summaryTile('Salary / Bonus', _money(totOut),
+                        const Color(0xFF10B981))),
+              ]),
             ]),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Wrap(spacing: 8, runSpacing: 8, children: [
-            ElevatedButton(
-                onPressed: () => _quickAdd(DriverTxType.advance),
-                child: const Text('Advance')),
-            ElevatedButton(
-                onPressed: () => _quickAdd(DriverTxType.salary),
-                child: const Text('Salary')),
-            ElevatedButton(
-                onPressed: () => _quickAdd(DriverTxType.deduction),
-                child: const Text('Deduction')),
-            ElevatedButton(
-                onPressed: () => _quickAdd(DriverTxType.bonus),
-                child: const Text('Bonus')),
+            _addBtn('Advance', DriverTxType.advance, const Color(0xFFEF4444)),
+            _addBtn('Fuel', DriverTxType.fuel, const Color(0xFFF59E0B)),
+            _addBtn('Penalty', DriverTxType.penalty, const Color(0xFFDC2626)),
+            _addBtn('Salary', DriverTxType.salary, const Color(0xFF10B981)),
+            _addBtn('Bonus', DriverTxType.bonus, const Color(0xFF059669)),
+            _addBtn(
+                'Deduction', DriverTxType.deduction, const Color(0xFF6366F1)),
           ]),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           const Text('Transactions',
               style: TextStyle(
                   color: Color(0xFF0F172A),
@@ -2568,20 +2659,107 @@ class _DriverLedgerScreenState extends State<DriverLedgerScreen> {
                   fontSize: 16)),
           const SizedBox(height: 8),
           if (driver.transactions.isEmpty)
-            const Text('No ledger entries yet.',
-                style: TextStyle(color: Color(0xFF64748B)))
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Text('No ledger entries yet.',
+                  style: TextStyle(color: Color(0xFF64748B))),
+            )
           else
-            ...driver.transactions.map((tx) => Card(
-                  child: ListTile(
-                    title: Text(tx.note.isEmpty ? tx.type.name : tx.note,
-                        style: const TextStyle(fontWeight: FontWeight.w800)),
-                    subtitle: Text(tx.date),
-                    trailing: Text('Rs.${tx.amount.toStringAsFixed(0)}',
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
+            ...List.generate(driver.transactions.length, (i) {
+              final tx = driver.transactions[i];
+              final isDebit = _signFor(tx.type) > 0;
+              final amtColor =
+                  isDebit ? const Color(0xFFEF4444) : const Color(0xFF10B981);
+              final runBal = i < runningNewestFirst.length
+                  ? runningNewestFirst[i]
+                  : driver.balance;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Row(children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                        color: amtColor.withValues(alpha: 0.12),
+                        shape: BoxShape.circle),
+                    child: Icon(
+                        isDebit
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
+                        color: amtColor,
+                        size: 18),
                   ),
-                )),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                              tx.type.name[0].toUpperCase() +
+                                  tx.type.name.substring(1),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 14,
+                                  color: Color(0xFF0F172A))),
+                          if (tx.note.isNotEmpty)
+                            Text(tx.note,
+                                style: const TextStyle(
+                                    color: Color(0xFF64748B), fontSize: 12)),
+                          Text('${tx.date}  •  Bal: ${_money(runBal)}',
+                              style: const TextStyle(
+                                  color: Color(0xFF94A3B8), fontSize: 11)),
+                        ]),
+                  ),
+                  Text('${isDebit ? '+' : '−'}${_money(tx.amount)}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          color: amtColor)),
+                ]),
+              );
+            }),
         ],
       ),
+    );
+  }
+
+  Widget _summaryTile(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label,
+            style: const TextStyle(
+                color: Color(0xFF64748B),
+                fontSize: 10,
+                fontWeight: FontWeight.w600)),
+        const SizedBox(height: 3),
+        Text(value,
+            style: TextStyle(
+                color: color, fontSize: 14, fontWeight: FontWeight.w800)),
+      ]),
+    );
+  }
+
+  Widget _addBtn(String label, DriverTxType type, Color color) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+          backgroundColor: color.withValues(alpha: 0.12),
+          foregroundColor: color,
+          elevation: 0,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+      onPressed: () => _quickAdd(type),
+      child: Text(label,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
     );
   }
 }
@@ -2606,11 +2784,17 @@ class _TallyExportScreenState extends State<TallyExportScreen> {
   String _fmt = "CA Audit CSV";
   String? _data;
 
+  String _normName(String? s) =>
+      (s ?? '').toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+
   List<TripLedger> get _effectiveLedgers {
     if (widget.userProfile.role == UserRole.driver) {
-      final name = FirebaseService.currentUser?.displayName ?? '';
+      final candidates = <String>{
+        _normName(FirebaseService.currentUser?.displayName),
+        _normName(widget.userProfile.companyName),
+      }..removeWhere((e) => e.isEmpty);
       return widget.ledgers
-          .where((l) => l.driverName != null && l.driverName == name)
+          .where((l) => candidates.contains(_normName(l.driverName)))
           .toList();
     }
     return widget.ledgers;
