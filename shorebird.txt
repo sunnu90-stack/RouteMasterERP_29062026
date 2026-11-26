@@ -1,0 +1,2 @@
+//apk generation
+shorebird release android -- --dart-define-from-file=keys.json
