@@ -7,3 +7,9 @@ flutter-plugins-dependencies
 
 # Secrets - never upload
 keys.json
+android/key.properties
+android/key.properties
+android/local.properties
+*.jks
+*.keystore
+.env
