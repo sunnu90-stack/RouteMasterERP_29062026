@@ -4,3 +4,6 @@
 build/
 .widget_preview/
 flutter-plugins-dependencies
+
+# Secrets - never upload
+keys.json
