@@ -1,2 +1,5 @@
 //apk generation
-shorebird release android -- --dart-define-from-file=keys.json
+shorebird release android --flutter-version=3.47.2 -- --dart-define-from-file=keys.json
+
+//change push command
+shorebird patch --platforms=android --release-version=5.0.1+6
